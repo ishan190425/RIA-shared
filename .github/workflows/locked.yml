@@ -18,3 +18,5 @@ jobs:
       - uses: actions/checkout@v4
       - name: every artifact is encrypted
         run: python3 .github/check_locked.py
+      - name: every artifact is accounted for
+        run: python3 .github/check_indexed.py
