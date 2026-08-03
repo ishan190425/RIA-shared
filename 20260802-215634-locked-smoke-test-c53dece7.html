@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Locked</title>
+<style>
+ :root { color-scheme: light dark; }
+ body { font-family: ui-sans-serif, -apple-system, system-ui, sans-serif;
+        display: grid; place-items: center; min-height: 100vh; margin: 0;
+        background: #f4f6f5; color: #16211f; }
+ @media (prefers-color-scheme: dark) { body { background: #0d1211; color: #e4ebe8; } }
+ form { display: grid; gap: .9rem; width: min(22rem, 88vw); }
+ h1 { font-size: 1.05rem; font-weight: 650; margin: 0; }
+ p { margin: 0; font-size: .9rem; opacity: .75; line-height: 1.5; }
+ input { font: inherit; font-family: ui-monospace, Menlo, monospace;
+         letter-spacing: .12em; text-transform: uppercase; padding: .7rem .8rem;
+         border: 1px solid #b9c4c1; border-radius: 6px; background: transparent;
+         color: inherit; }
+ button { font: inherit; font-weight: 650; padding: .65rem; border: 0;
+          border-radius: 6px; background: #0e6b62; color: #fff; cursor: pointer; }
+ button:disabled { opacity: .6; cursor: progress; }
+ .err { color: #b4472f; font-size: .85rem; min-height: 1.2em; }
+</style></head>
+<body>
+<form id="f">
+  <h1>This page needs a code</h1>
+  <p>Whoever sent you the link should have sent a code separately. It is not
+     stored anywhere on this page &mdash; the contents stay encrypted until you
+     type it.</p>
+  <input id="c" autocomplete="off" autocapitalize="characters" spellcheck="false"
+         aria-label="Access code" placeholder="ACCESS CODE" required>
+  <button id="b" type="submit">Unlock</button>
+  <div class="err" id="e" role="alert"></div>
+</form>
+<script>
+const S="j6jag0v4VrlHrGNnWtSGng==",V="N4VhcUHCDNKbJwCg",D="gKs6tdiup+j2Zzmmo6PBcaJ5w012H05/fYjD4AnfkTE9Dh8XFnWtXC5zLWt3NLjx5QSYnfrzp51G0fG/VEhbkR68915dHkDSd18UVifk2W4IFSjvoU/C/CGNxrOMqZ13+sfHw7lomR22bhaN9Tkm3oy64k5KC7Ua2tMNEMw1cyZZnS9x9ROSGSc3AH5WV4txdWN1JCyFU0VyFKAVVZbIV/gExgy2XIE+594fRRfQnKrT8wiO5X25b+5oo1bzcuS59UK0RuTXiUXb2CJUDtt1JMJG0te1sG/hmwCdk2S8iBm4Q6c0wLV6k68gnKvJXFGbcDq/x0gT0cq8g1L0Q1umgftcgBtR0Vt1O6Jo/RjEt4ZlxFbH+GNRlhZD2iqrPhe1WWPRkvLf9Q3fFKO+w578FP/1QFwS7/ocjC1gFZeX4hlx",N=600000;
+const bytes=s=>Uint8Array.from(atob(s),c=>c.charCodeAt(0));
+document.getElementById('f').addEventListener('submit',async ev=>{
+  ev.preventDefault();
+  const btn=document.getElementById('b'),err=document.getElementById('e');
+  const code=document.getElementById('c').value.trim().toUpperCase();
+  if(!code){return;}
+  btn.disabled=true; btn.textContent='Unlocking…'; err.textContent='';
+  try{
+    const base=await crypto.subtle.importKey('raw',new TextEncoder().encode(code),
+      'PBKDF2',false,['deriveKey']);
+    const key=await crypto.subtle.deriveKey(
+      {name:'PBKDF2',salt:bytes(S),iterations:N,hash:'SHA-256'},
+      base,{name:'AES-GCM',length:256},false,['decrypt']);
+    const out=await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes(V)},key,bytes(D));
+    const html=new TextDecoder().decode(out);
+    document.open(); document.write(html); document.close();
+  }catch(_){
+    err.textContent='That code didn\u2019t work.';
+    btn.disabled=false; btn.textContent='Unlock';
+  }
+});
+</script></body></html>
