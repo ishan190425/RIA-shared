@@ -1,0 +1,20 @@
+name: artifacts-are-locked
+
+# Every page in this repo is world-readable, so every page must be encrypted
+# under its own access code. This runs on anything that reaches main and on
+# every PR, so a plaintext page is caught however it arrived — RIA, a script,
+# or someone pasting a file in by hand.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  locked:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: every artifact is encrypted
+        run: python3 .github/check_locked.py
