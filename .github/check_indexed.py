@@ -20,7 +20,14 @@ import pathlib
 import re
 import sys
 
-ALLOWED_UNINDEXED = {"index.html"}
+# Infrastructure, not artifacts. Kept in step with check_locked.py's
+# ALLOWED_PLAINTEXT — the two lists answer different questions about the same
+# set of files, and a file that is one but not the other is a mistake.
+ALLOWED_UNINDEXED = {
+    "index.html", "README.md", "ARTIFACTS.md", "CNAME",
+    "icon.svg", "icon-32.png", "apple-touch-icon.png", "og.png", ".nojekyll",
+}
+SKIP_DIRS = {"comments"}
 
 root = pathlib.Path(__file__).resolve().parent.parent
 index = root / "ARTIFACTS.md"
@@ -32,10 +39,18 @@ if not index.exists():
 
 text = index.read_text(encoding="utf-8")
 
+# EVERY file, not just *.html — same reasoning as check_locked.py. An index
+# that only lists the format someone thought of first is not an inventory of
+# what is published, and "what is published here" is the entire question this
+# guard exists to answer.
 missing = []
-for path in sorted(root.rglob("*.html")):
+for path in sorted(root.rglob("*")):
+    if not path.is_file():
+        continue
     rel = path.relative_to(root)
-    if ".github" in rel.parts or str(rel) in ALLOWED_UNINDEXED:
+    if ".git" in rel.parts or ".github" in rel.parts:
+        continue
+    if str(rel) in ALLOWED_UNINDEXED or rel.parts[0] in SKIP_DIRS:
         continue
     if path.name not in text:
         missing.append(rel)
